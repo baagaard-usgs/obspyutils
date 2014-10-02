@@ -44,7 +44,6 @@ def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTi
             t = raw[:,0]
             data = raw[:,1]
             dt = t[1]-t[0]
-            print dt
 
             try:
                 originDateTime = obspy.core.UTCDateTime(originTime)
