@@ -1,0 +1,17 @@
+Utilities for working with seismic waveform data via ObsPy.
+
+Brad T. Aagaard, U.S. Geological Survey
+
+Features
+
+  * Boore (1999) V0 baseline corrections.
+
+  * Add longitude, latitude, distance, and azimuth to waveform metadata.
+
+  * Remove structures from CISN station lists.
+
+  * Group waveforms by station.
+
+  * Pickle/Unpickle helper functions.
+
+  * Convert SPECFEM3D waveform output to ObsPy stream.
