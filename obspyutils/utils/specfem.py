@@ -53,7 +53,7 @@ def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTi
             metadata = {'network': network,
                         'station': station,
                         'channel': channel,
-                        'starttime': originDateTime,
+                        'starttime': originDateTime+t[0],
                         'delta': dt,
                         }
 
