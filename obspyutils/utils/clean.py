@@ -31,7 +31,7 @@ def _correctionV0(acc, tpre, ttail):
     mask = t >= t2
     tfit = t[mask]
     vfit = vel.data[mask]
-    p = optimize.curve_fit(linearvel, tfit, vfit)
+    p = optimize.curve_fit(_linearvel, tfit, vfit)
     (v0, af) = p[0]
 
     # Average acceleration in strong part of record
@@ -56,7 +56,7 @@ def baseline_correction(stream, originTime, ttail=None):
         tpre = originTime - tr.stats.starttime
         if not ttail:
             ttail = tpre
-        _correctionV0(tr, tpre)
+        _correctionV0(tr, tpre, ttail)
     return
 
 
