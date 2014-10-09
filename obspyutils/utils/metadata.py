@@ -25,7 +25,7 @@ def addLocation(inventory, stream, epicenter=None, projection=None):
             metadata[key] = station
 
     # Project epicenter
-    epicenterXY = proj(epicenter[0], epicenter[1])
+    epicenterXY = projection(epicenter[0], epicenter[1])
 
     # Set metadata in traces
     if epicenter:
@@ -33,7 +33,7 @@ def addLocation(inventory, stream, epicenter=None, projection=None):
             key = "%s.%s" % (trace.stats.network, trace.stats.station)
             stmeta = metadata[key]
 
-            stXY = proj(stmeta.longitude, stmeta.latitude)
+            stXY = projection(stmeta.longitude, stmeta.latitude)
             epidist = ((stXY[0]-epicenterXY[0])**2 + (stXY[1]-epicenterXY[1])**2)**0.5
             azimuth = math.atan2(stXY[0]-epicenterXY[0], stXY[1]-epicenterXY[1])/math.pi*180.0
             if azimuth > 0:
