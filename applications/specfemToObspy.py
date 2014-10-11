@@ -22,7 +22,11 @@ class ConvertApp(object):
         """
         self.filenameIn = None
         self.filenameOut = None
+
         self.originTime = None
+        self.epicenter = None
+        self.utmZone = None
+
         self.channelCode = None
         self.dataType = None
         self.dataDir = None
@@ -35,8 +39,16 @@ class ConvertApp(object):
         """
         import obspyutils.utils.specfem as specfem
         import obspyutils.utils.io as io
+        import obspyutils.utils.metadata as metadata
 
         s = specfem.tostream(self.filenameIn, self.dataDir, self.originTime, self.channelCode, self.dataType)
+
+        # Add azimuth and distance
+        if self.epicenter and self.utmZone:
+            import pyproj
+            projection = pyproj.Proj(proj='utm', zone=self.utmZone, ellps='WGS84')
+            metadata.addAzimuthDist(s, self.epicenter, projection)
+            
         io.pickle(self.filenameOut, s)
 
         return
@@ -58,10 +70,20 @@ if __name__ == '__main__':
                       type="string", metavar="FILE",
                       help="Pickle stream to FILE. [waveforms_syn.p]",
                       default="waveforms_syn.p")
+    
     parser.add_option("-s", "--origintime", dest="originTime",
                       type="string", metavar="FORMAT",
                       help="Earthquake origin time.",
                       )
+    parser.add_option("-e", "--epicenter", dest="epicenter",
+                      type="string", metavar="FORMAT",
+                      help="Earthquake epicenter as lon,lat.",
+                      )
+    parser.add_option("-z", "--utmzone", dest="utmZone",
+                      type="string", metavar="FORMAT",
+                      help="UTM zone.",
+                      )
+
     parser.add_option("-c", "--channelcode", dest="channelCode",
                       type="str", metavar="CHANNEL",
                       help="Channel code used by synthetics.",
@@ -81,7 +103,11 @@ if __name__ == '__main__':
     app = ConvertApp()
     app.filenameIn = options.filenameIn
     app.filenameOut = options.filenameOut
+    
     app.originTime = options.originTime
+    app.epicenter = tuple(map(float, options.epicenter.split(',')))
+    app.utmZone = int(options.utmZone)
+
     app.channelCode = options.channelCode
     app.dataType = options.dataType
     app.dataDir = options.dataDir
