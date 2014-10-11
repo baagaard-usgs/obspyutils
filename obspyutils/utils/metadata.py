@@ -9,55 +9,46 @@ import math
 import obspy
 
 #-----------------------------------------------------------------------
-def addLocation(inventory, stream, epicenter=None, projection=None):
+def addLocation(inventory, stream):
     """
-
-    proj = pyproj.Proj(proj='utm', zone=params.utmZone, ellps='WGS84')
-
+    Add longitude, latitude, and elevation to trace stats.
     """
+    for trace in stream.traces:
+        ist = inventory.select(network=trace.stats.network, station=trace.stats.station)
+        stmeta = ist.networks[0].stations[0]
+        info = {'longitude': stmeta.longitude,
+                'latitude': stmeta.latitude,
+                'elevation': stmeta.elevation,
+                }
+        trace.stats.update(info)
+    return
 
+
+#-----------------------------------------------------------------------
+def addAzimuthDist(stream, epicenter, projection):
+    """
+    Add azimith and distance to stream stats.
+    Epicenter is given in (longitude, latitude) and projection is a pyproj projection.
     
-    # Create metadata dictionary
-    metadata = {}
-    for network in inventory.networks:
-        for station in network.stations:
-            key = "%s.%s" % (network.code, station.code)
-            metadata[key] = station
-
+    projection = pyproj.Proj(proj='utm', zone=params.utmZone, ellps='WGS84')
+    """
     # Project epicenter
     epicenterXY = projection(epicenter[0], epicenter[1])
 
-    # Set metadata in traces
-    if epicenter:
-        for trace in stream.traces:
-            key = "%s.%s" % (trace.stats.network, trace.stats.station)
-            stmeta = metadata[key]
+    for trace in stream.traces:
 
-            stXY = projection(stmeta.longitude, stmeta.latitude)
-            epidist = ((stXY[0]-epicenterXY[0])**2 + (stXY[1]-epicenterXY[1])**2)**0.5
-            azimuth = math.atan2(stXY[0]-epicenterXY[0], stXY[1]-epicenterXY[1])/math.pi*180.0
-            if azimuth > 0:
-                backazimuth = azimuth - 180.0
-            else:
-                backazimuth = azimuth + 180.0
+        stXY = projection(trace.stats.longitude, trace.stats.latitude)
+        epidist = ((stXY[0]-epicenterXY[0])**2 + (stXY[1]-epicenterXY[1])**2)**0.5
+        azimuth = math.atan2(stXY[0]-epicenterXY[0], stXY[1]-epicenterXY[1])/math.pi*180.0
+        if azimuth > 0:
+            backazimuth = azimuth - 180.0
+        else:
+            backazimuth = azimuth + 180.0
 
-            info = {'longitude': stmeta.longitude,
-                    'latitude': stmeta.latitude,
-                    'elevation': stmeta.elevation,
-                    'azimuth': azimuth,
-                    'back_azimuth': 180-azimuth,
-                    'distance': epidist}
-            trace.stats.update(info)
-    else:
-        for trace in stream.traces:
-            key = "%s.%s" % (trace.stats.network, trace.stats.station)
-            stmeta = metadata[key]
-
-            info = {'longitude': stmeta.longitude,
-                    'latitude': stmeta.latitude,
-                    'elevation': stmeta.elevation,
-                    }
-            trace.stats.update(info)
+        info = {'azimuth': azimuth,
+                'back_azimuth': 180-azimuth,
+                'distance': epidist}
+        trace.stats.update(info)
     return
 
 
@@ -79,13 +70,15 @@ def missing(inventory, stream):
             found[key] = station
 
     import collections
+
+    print "Missing:",len(missing)
     missingO = collections.OrderedDict(sorted(missing.items()))
     for key, station in missingO.items():
         print key
-    print "Missing:",len(missing)
 
+    print "\n"
+    print "Found:",len(found)
     foundO = collections.OrderedDict(sorted(found.items()))
     for key, station in foundO.items():
         print key
-    print "Found:",len(found)
 
