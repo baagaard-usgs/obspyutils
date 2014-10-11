@@ -8,7 +8,7 @@
 # ======================================================================
 #
 
-# Setup script for the eqdatautils package
+# Setup script for the obspyutils package
 
 from distutils.core import setup
 
