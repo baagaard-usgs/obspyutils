@@ -19,8 +19,7 @@ setup(name='obspyutils',
       packages=['obspyutils',
                 'obspyutils/utils',
                 ],
-      scripts=['applications/specfemToObspy.py',
-               ]
+      scripts=[]
       )
 
 

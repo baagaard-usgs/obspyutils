@@ -66,4 +66,48 @@ def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTi
     return stream
 
 
+# ----------------------------------------------------------------------
+# ToObsPyApp
+class ToObspyApp(object):
+    """
+    Python script for converting ASCII SPECFEM3D waveform output to ObsPy stream.
+    """
+
+    def __init__(self):
+        """
+        Constructor.
+        """
+        self.filenameIn = None
+        self.filenameOut = None
+
+        self.originTime = None
+        self.epicenter = None
+        self.utmZone = None
+
+        self.channelCode = None
+        self.dataType = None
+        self.dataDir = None
+        return
+
+
+    def run(self):
+        """
+        Run conversion application.
+        """
+        import obspyutils.utils.io as io
+        import obspyutils.utils.metadata as metadata
+
+        s = tostream(self.filenameIn, self.dataDir, self.originTime, self.channelCode, self.dataType)
+
+        # Add azimuth and distance
+        if self.epicenter and self.utmZone:
+            import pyproj
+            projection = pyproj.Proj(proj='utm', zone=self.utmZone, ellps='WGS84')
+            metadata.addAzimuthDist(s, self.epicenter, projection)
+            
+        io.pickle(self.filenameOut, s)
+
+        return
+  
+
 # End of file
