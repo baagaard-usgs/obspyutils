@@ -8,6 +8,7 @@
 import numpy
 import obspy
 from scipy import optimize
+from scipy import interpolate
 
 # ----------------------------------------------------------------------
 def _linearvel(t, v0, af):
@@ -51,12 +52,22 @@ def _correctionV0(acc, tpre, ttail):
     
 
 # ----------------------------------------------------------------------
-def baseline_correction(stream, originTime, ttail=None):
+def baseline_correction_v0(stream, originTime, ttail=None):
     for tr in stream.traces:
         tpre = originTime - tr.stats.starttime
         if not ttail:
             ttail = tpre
         _correctionV0(tr, tpre, ttail)
+    return
+
+
+# ----------------------------------------------------------------------
+def baseline_correction_spline(stream, knotsN=400):
+    for tr in stream.traces:
+        t = tr.times()
+        knots = numpy.linspace(t[knotsN/2], t[-knotsN/2], len(t)/knotsN)
+        spline = interpolate.LSQUnivariateSpline(tr.times(), tr.data, t=knots, k=5)
+        tr.data -= spline(t)
     return
 
 
