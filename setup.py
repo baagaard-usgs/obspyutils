@@ -17,7 +17,6 @@ setup(name='obspyutils',
       description='Utilities for working with seismic waveform data via ObsPy.',
       author='Brad Aagaard',
       packages=['obspyutils',
-                'obspyutils/utils',
                 ],
       scripts=[]
       )

@@ -109,5 +109,53 @@ class ToObspyApp(object):
 
         return
   
+#-----------------------------------------------------------------------
+def writeCMT(event, centroidId="smi:nc.anss.org/origin/TMTS", hdur=0.0, filename="DATA/CMTSOLUTION", extractDC=False):
+    """
+    Write SPECFEM3D CMT file given event.
+    """
+    import event as eventutils
+    import momenttensor
+
+    evtname = eventutils.event_name(event)
+
+    centroid = eventutils.find_origin(event, centroidId)
+    time = centroid.time
+
+    mt = eventutils.moment_tensor(event)
+    Mw = momenttensor.Mw(mt)
+
+    fout = open(filename, "w")
+    fout.write("PDE %d %d %d %d %d %f" % (time.year, time.month, time.day, time.hour, time.minute, time.second))
+    fout.write(" %.4f %.4f %.2f" % (centroid.latitude, centroid.longitude, centroid.depth/1000.0))
+    fout.write(" %.2f %.2f" % (Mw, Mw))
+    fout.write(" %s\n" % evtname)
+    
+    fout.write("event name: %s\n" % evtname)
+    fout.write("time shift: %.1f\n" % 0.0)
+    fout.write("half duration: %.1f\n" % hdur)
+    fout.write("latitude: %.5f\n" % centroid.latitude)
+    fout.write("longitude: %.5f\n" % centroid.longitude)
+    fout.write("depth: %.3f\n" % (centroid.depth/1000.0))
+
+    t = mt.tensor
+    tscale = 1.0e+7
+    if not extractDC:
+        fout.write("Mrr: %12.4e\n" % (t.m_rr*tscale))
+        fout.write("Mtt: %12.4e\n" % (t.m_tt*tscale))
+        fout.write("Mpp: %12.4e\n" % (t.m_pp*tscale))
+        fout.write("Mrt: %12.4e\n" % (t.m_rt*tscale))
+        fout.write("Mrp: %12.4e\n" % (t.m_rp*tscale))
+        fout.write("Mtp: %12.4e\n" % (t.m_tp*tscale))
+    else:
+        mDC = momenttensor.extractDC(mt)
+        fout.write("Mrr: %12.4e\n" % (mDC[0,0]*tscale))
+        fout.write("Mtt: %12.4e\n" % (mDC[0,1]*tscale))
+        fout.write("Mpp: %12.4e\n" % (mDC[0,2]*tscale))
+        fout.write("Mrt: %12.4e\n" % (mDC[1,1]*tscale))
+        fout.write("Mrp: %12.4e\n" % (mDC[1,2]*tscale))
+        fout.write("Mtp: %12.4e\n" % (mDC[2,2]*tscale))
+
+    return
 
 # End of file

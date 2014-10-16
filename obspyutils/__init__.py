@@ -8,8 +8,17 @@
 # ======================================================================
 #
 
-__all__ = ['utils',
-           ]
+__all__ = [
+    "cisn",
+    "baseline",
+    "pickle",
+    "metadata",
+    "rotate",
+    "specfem",
+    "subset",
+    "event",
+    "momenttensor",
+]
 
 
 # End of file
