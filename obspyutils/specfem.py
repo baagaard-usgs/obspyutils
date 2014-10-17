@@ -45,17 +45,12 @@ def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTi
             data = raw[:,1]
             dt = t[1]-t[0]
 
-            try:
-                originDateTime = obspy.core.UTCDateTime(originTime)
-            except TypeError:
-                raise TypeError("Cannot parse originTime '%s' into a UTCDateTime object." % originTime)
-            
             metadata = {'network': network,
                         'station': station,
                         'channel': channel,
                         'longitude': longitude,
                         'latitude': latitude,
-                        'starttime': originDateTime+t[0],
+                        'starttime': originTime+t[0],
                         'delta': dt,
                         }
 
