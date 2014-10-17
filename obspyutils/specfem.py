@@ -94,8 +94,8 @@ class ToObspyApp(object):
         """
         Run conversion application.
         """
-        import obspyutils.utils.io as io
-        import obspyutils.utils.metadata as metadata
+        import obspyutils.pickle as pickle
+        import obspyutils.metadata as metadata
 
         s = tostream(self.filenameIn, self.dataDir, self.originTime, self.channelCode, self.dataType)
 
@@ -105,7 +105,7 @@ class ToObspyApp(object):
             projection = pyproj.Proj(proj='utm', zone=self.utmZone, ellps='WGS84')
             metadata.addAzimuthDist(s, self.epicenter, projection)
             
-        io.pickle(self.filenameOut, s)
+        pickle.pickle(self.filenameOut, s)
 
         return
   
