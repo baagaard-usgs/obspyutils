@@ -6,6 +6,7 @@ obspyutils/clean.py
 obspyutils/io.py
 obspyutils/metadata.py
 obspyutils/rotate.py
+obspyutils/pylith.py
 obspyutils/specfem.py
 obspyutils/subset.py
 obspyutils/event.py

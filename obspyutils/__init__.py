@@ -14,6 +14,7 @@ __all__ = [
     "pickle",
     "metadata",
     "rotate",
+    "pylith",
     "specfem",
     "subset",
     "event",
