@@ -7,6 +7,8 @@
 
 import obspy
 import numpy
+import datetime
+import math
 
 # ======================================================================
 # GNSCusp
@@ -123,9 +125,8 @@ class GNSCusp(object):
 
     # line 2
     fields = lines[i].split(); i += 1
-    lat = -float(fields[0])
-    lon = float(fields[1])
-    header['station_lonlatelev'] = numpy.array([lon, lat, 0.0], dtype=numpy.float64)
+    header['longitude'] = float(fields[1])
+    header['latitude'] = -float(fields[0])
 
     # line 3
     fields = lines[i].split(); i += 1
@@ -224,7 +225,7 @@ class GNSCusp(object):
 
 
 #-----------------------------------------------------------------------
-def tostream(sites, filepattern, channelCode="HN"):
+def tostream(sites, filepattern, channelCode="HN", network="NZ"):
     """
     Convert GNS Cusp files to obspy stream.
     """
@@ -236,16 +237,17 @@ def tostream(sites, filepattern, channelCode="HN"):
         filename = filepattern % site
         cusp = GNSCusp(filename)
 
+        header = cusp.header
         for ic,component in enumerate(["E","N","Z"]):
             channel = "%s%s" % (channelCode, component)
 
             metadata = {'network': network,
-                        'station': station,
+                        'station': header['id'],
                         'channel': channel,
-                        'longitude': points[ipt,0],
-                        'latitude': points[ipt,1],
-                        'starttime': originTime+t[0],
-                        'delta': dt,
+                        'longitude': header['longitude'],
+                        'latitude': header['latitude'],
+                        'starttime': header['start_time'],
+                        'delta': header['dt'],
                     }
 
             trace = obspy.core.Trace(data=cusp.acc[:,ic], header=metadata)
