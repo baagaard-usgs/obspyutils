@@ -24,8 +24,16 @@ def find_origin(event, methodId):
 def moment_tensor(event):
     for fm in event.focal_mechanisms:
         if not fm.moment_tensor.resource_id is None:
-            return fm.moment_tensor
+            return fm
     raise ValueError("Could not find moment tensor in event %s." % event)
+    return
+
+# ----------------------------------------------------------------------
+def first_motion(event):
+    for fm in event.focal_mechanisms:
+        if 'nodal_plane_1' in fm.nodal_planes:
+            return fm
+    raise ValueError("Could not find focal mechanism with nodal planes in event %s." % event)
     return
 
 
