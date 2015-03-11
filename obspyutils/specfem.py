@@ -116,28 +116,26 @@ def writeCMT(event, originId=None, mechanismId=None, hdur=0.0, filename="DATA/CM
 
     if originId is None:
         originId = "smi:nc.anss.org/origin/HYP2000"
-    import pdb
-    pdb.set_trace()
     origin = eventutils.find_origin(event, originId)
     time = origin.time
 
     if mechanismId is None:
-        mechanismId = "smi:nc.anss.org/origin/HYP2000"
-    mt = eventutils.find_focalmechanism(event, mechanismId)
+        mechanismId = "smi:nc.anss.org/momentTensor/TMTS"
+    mt = eventutils.find_momenttensor(event, mechanismId)
     Mw = momenttensor.Mw(mt)
 
     fout = open(filename, "w")
     fout.write("PDE %d %d %d %d %d %f" % (time.year, time.month, time.day, time.hour, time.minute, time.second))
-    fout.write(" %.4f %.4f %.2f" % (centroid.latitude, centroid.longitude, centroid.depth/1000.0))
+    fout.write(" %.4f %.4f %.2f" % (origin.latitude, origin.longitude, origin.depth/1000.0))
     fout.write(" %.2f %.2f" % (Mw, Mw))
     fout.write(" %s\n" % evtname)
     
     fout.write("event name: %s\n" % evtname)
     fout.write("time shift: %.1f\n" % 0.0)
     fout.write("half duration: %.1f\n" % hdur)
-    fout.write("latitude: %.5f\n" % centroid.latitude)
-    fout.write("longitude: %.5f\n" % centroid.longitude)
-    fout.write("depth: %.3f\n" % (centroid.depth/1000.0))
+    fout.write("latitude: %.5f\n" % origin.latitude)
+    fout.write("longitude: %.5f\n" % origin.longitude)
+    fout.write("depth: %.3f\n" % (origin.depth/1000.0))
 
     t = mt.tensor
     tscale = 1.0e+7
