@@ -21,20 +21,35 @@ def find_origin(event, methodId):
     return
 
 # ----------------------------------------------------------------------
-def find_focalmechanism(event, methodId):
-    for fm in event.focal_mechanisms:
-        if methodId == fm.method_id.id:
-            return fm
-    raise ValueError("Could not find focal mechanism in event %s for method %s." % \
-                     (event, methodId))
+def find_focalmechanism(event, methodId=None):
+    if methodId:
+        for fm in event.focal_mechanisms:
+            if methodId == fm.method_id.id:
+                return fm
+        raise ValueError("Could not find focal mechanism in event %s for method %s." % \
+                         (event, methodId))
+    else: # Find first one
+        for fm in event.focal_mechanisms:
+            if not fm.resource_id is None:
+                return fm
+        raise ValueError("Could not find any focal mechanism in event %s." % \
+                         (event,))
     return
 
 # ----------------------------------------------------------------------
-def moment_tensor(event):
-    for fm in event.focal_mechanisms:
-        if not fm.moment_tensor.resource_id is None:
-            return fm
-    raise ValueError("Could not find moment tensor in event %s." % event)
+def find_momenttensor(event, methodId=None):
+    if methodId:
+        for fm in event.focal_mechanisms:
+            if not hasattr(fm, 'moment_tensor') or fm.moment_tensor.resource_id is None:
+                continue
+            if fm.moment_tensor.method_id and fm.moment_tensor.method_id.id == methodId:
+                return fm.moment_tensor
+        raise ValueError("Could not find moment tensor in event %s for method %s." % (event, methodId))
+    else: # Find first one
+        for fm in event.focal_mechanisms:
+            if not fm.moment_tensor.resource_id is None:
+                return fm.moment_tensor
+        raise ValueError("Could not find moment tensor in event %s." % event)
     return
 
 # ----------------------------------------------------------------------
@@ -52,7 +67,8 @@ def add_dconly(event):
         if not fm.moment_tensor.resource_id is None:
             import obspyutils.momenttensor
             mtdc = obspyutils.momenttensor.extractDC(fm.moment_tensor)
-            event.focal_mechanisms.append(mtdc)
+            from obspy.core.event import FocalMechanism
+            event.focal_mechanisms.append(FocalMechanism(method_id=fm.method_id, moment_tensor=mtdc))
             return
     return
 
