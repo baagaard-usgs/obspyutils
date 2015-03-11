@@ -58,14 +58,13 @@ def extractDC(mt, rescale=False):
     if rescale:
         MoDC = 0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5
         Mdc *= mt.scalar_moment / MoDC
-    mtdc = mt.copy()
-    mtdc.update({'method_id': "smi:baagaard.usgs.gov/origin/EXTRACTDC",
-                 'tensor': toTensor(Mdc), 
-                 'scalar_moment': 0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5,
-                 'double_couple': 1.0,
-                 'clvd': 0.0,
-                 'iso': 0.0,
-             })
+    mtdc = MomentTensor(method_id="smi:baagaard.usgs.gov/origin/EXTRACTDC",
+                        tensor=toTensor(Mdc), 
+                        scalar_moment=0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5,
+                        double_couple=1.0,
+                        clvd=0.0,
+                        iso=0.0,
+                        inversion_type='double couple')
     return mtdc
 
 
