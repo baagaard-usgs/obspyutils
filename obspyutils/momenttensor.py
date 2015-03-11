@@ -34,7 +34,9 @@ def seismicMoment(Mw):
 #-----------------------------------------------------------------------
 def extractDC(mt, rescale=False):
     """
-    WARNING: NOT VERIFIED!!!
+                                  [+0.5,  0,   0]
+    Mdc = s1-s3+abs(s1+s3-2*s2) * [   0,  0.   0]
+                                  [   0,  0,-0.5]
     """
     t = mt.tensor
     M = numpy.array([[t.m_rr, t.m_rt, t.m_rp],
@@ -43,25 +45,28 @@ def extractDC(mt, rescale=False):
                     dtype=numpy.float64)
 
     w,v = numpy.linalg.eig(M)
-    wv = sorted(zip(w,v), key=lambda v: v[0])
+    wv = sorted(zip(w,v.transpose()), key=lambda v: v[0])
 
     s3,v3 = wv[2]
     s2,v2 = wv[1]
     s1,v1 = wv[0]
 
     R = numpy.vstack((v1,v2,v3)).transpose()
-
-    MdcP = numpy.array([[0.5*(s1-s3), 0, 0], [0, 0, 0], [0, 0, -0.5*(s1-s3)]],
-                       dtype=numpy.float64)
-
+    Mo = s1-s3+abs(s1+s3-2*s2)
+    MdcP = Mo*numpy.array([[+0.5, 0, 0], [0, 0, 0], [0, 0, -0.5]], dtype=numpy.float64)
     Mdc = numpy.dot(numpy.dot(R, MdcP), R.transpose())
     if rescale:
         MoDC = 0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5
         Mdc *= mt.scalar_moment / MoDC
     mtdc = mt.copy()
-    mtdc.update({'tensor': toTensor(Mdc), 'scalar_moment': 0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5})
-    #return mtdc
-    return # Not verified
+    mtdc.update({'method_id': "smi:baagaard.usgs.gov/origin/EXTRACTDC",
+                 'tensor': toTensor(Mdc), 
+                 'scalar_moment': 0.5**0.5*numpy.tensordot(Mdc,Mdc)**0.5,
+                 'double_couple': 1.0,
+                 'clvd': 0.0,
+                 'iso': 0.0,
+             })
+    return mtdc
 
 
 #-----------------------------------------------------------------------
