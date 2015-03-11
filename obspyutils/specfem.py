@@ -105,7 +105,7 @@ class ToObspyApp(object):
         return
   
 #-----------------------------------------------------------------------
-def writeCMT(event, centroidId="smi:nc.anss.org/origin/TMTS", hdur=0.0, filename="DATA/CMTSOLUTION", extractDC=False):
+def writeCMT(event, originId=None, mechanismId=None, hdur=0.0, filename="DATA/CMTSOLUTION"):
     """
     Write SPECFEM3D CMT file given event.
     """
@@ -114,10 +114,16 @@ def writeCMT(event, centroidId="smi:nc.anss.org/origin/TMTS", hdur=0.0, filename
 
     evtname = eventutils.event_name(event)
 
-    centroid = eventutils.find_origin(event, centroidId)
-    time = centroid.time
+    if originId is None:
+        originId = "smi:nc.anss.org/origin/HYP2000"
+    import pdb
+    pdb.set_trace()
+    origin = eventutils.find_origin(event, originId)
+    time = origin.time
 
-    mt = eventutils.moment_tensor(event)
+    if mechanismId is None:
+        mechanismId = "smi:nc.anss.org/origin/HYP2000"
+    mt = eventutils.find_focalmechanism(event, mechanismId)
     Mw = momenttensor.Mw(mt)
 
     fout = open(filename, "w")
@@ -135,21 +141,12 @@ def writeCMT(event, centroidId="smi:nc.anss.org/origin/TMTS", hdur=0.0, filename
 
     t = mt.tensor
     tscale = 1.0e+7
-    if not extractDC:
-        fout.write("Mrr: %12.4e\n" % (t.m_rr*tscale))
-        fout.write("Mtt: %12.4e\n" % (t.m_tt*tscale))
-        fout.write("Mpp: %12.4e\n" % (t.m_pp*tscale))
-        fout.write("Mrt: %12.4e\n" % (t.m_rt*tscale))
-        fout.write("Mrp: %12.4e\n" % (t.m_rp*tscale))
-        fout.write("Mtp: %12.4e\n" % (t.m_tp*tscale))
-    else:
-        mDC = momenttensor.extractDC(mt)
-        fout.write("Mrr: %12.4e\n" % (mDC[0,0]*tscale))
-        fout.write("Mtt: %12.4e\n" % (mDC[0,1]*tscale))
-        fout.write("Mpp: %12.4e\n" % (mDC[0,2]*tscale))
-        fout.write("Mrt: %12.4e\n" % (mDC[1,1]*tscale))
-        fout.write("Mrp: %12.4e\n" % (mDC[1,2]*tscale))
-        fout.write("Mtp: %12.4e\n" % (mDC[2,2]*tscale))
+    fout.write("Mrr: %12.4e\n" % (t.m_rr*tscale))
+    fout.write("Mtt: %12.4e\n" % (t.m_tt*tscale))
+    fout.write("Mpp: %12.4e\n" % (t.m_pp*tscale))
+    fout.write("Mrt: %12.4e\n" % (t.m_rt*tscale))
+    fout.write("Mrp: %12.4e\n" % (t.m_rp*tscale))
+    fout.write("Mtp: %12.4e\n" % (t.m_tp*tscale))
 
     return
 
