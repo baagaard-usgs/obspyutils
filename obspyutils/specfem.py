@@ -148,4 +148,20 @@ def writeCMT(event, originId=None, mechanismId=None, hdur=0.0, filename="DATA/CM
 
     return
 
+
+#-----------------------------------------------------------------------
+def writeStations(inventory, filename="DATA/STATIONS"):
+    """
+    Write SPECFEM3D STATIONS file given station inventory.
+    """
+
+    fout = open(filename, "w")
+    for network in inventory.networks:
+        for station in network.stations:
+            fout.write("%s %s %.4f %.4f %.1f\n" %\
+                       (station.code, network.code, station.latitude, station.longitude, 0.0))
+    fout.close()
+    return
+
+
 # End of file
