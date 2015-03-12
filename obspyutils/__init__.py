@@ -19,6 +19,7 @@ __all__ = [
     "subset",
     "event",
     "momenttensor",
+    'settings',
 ]
 
 
