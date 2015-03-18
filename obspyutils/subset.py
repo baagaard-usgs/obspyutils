@@ -53,8 +53,11 @@ def pairsObsSyn(obs, syn):
     
     pairs = []
     for trObs in obs:
-        trSyn = syn.select(network=trObs.stats.network, station=trObs.stats.station, channel="??"+trObs.stats.channel[-1]).traces[0]
-        pairs.append((trObs, trSyn))
+        trSyn = syn.select(network=trObs.stats.network, station=trObs.stats.station, channel="??"+trObs.stats.channel[-1]).traces
+        if 1 == len(trSyn):
+            pairs.append((trObs, trSyn[0]))
+        else:
+            print "WARNING: No synthetic found matching trace: %s" % trObs
     return pairs
 
 
