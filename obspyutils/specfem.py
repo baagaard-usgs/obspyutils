@@ -125,7 +125,7 @@ def writeCMT(event, originId=None, mechanismId=None, hdur=0.0, filename="DATA/CM
     Mw = momenttensor.Mw(mt)
 
     fout = open(filename, "w")
-    fout.write("PDE %d %d %d %d %d %f" % (time.year, time.month, time.day, time.hour, time.minute, time.second))
+    fout.write("PDE %5d%3d%3d%3d%3d%6.2f" % (time.year, time.month, time.day, time.hour, time.minute, time.second))
     fout.write(" %.4f %.4f %.2f" % (origin.latitude, origin.longitude, origin.depth/1000.0))
     fout.write(" %.2f %.2f" % (Mw, Mw))
     fout.write(" %s\n" % evtname)
