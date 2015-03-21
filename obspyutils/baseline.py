@@ -65,7 +65,7 @@ def baseline_correction_v0(stream, originTime, ttail=None):
 def baseline_correction_spline(stream, window=2.0):
     for tr in stream.traces:
         t = tr.times()
-        knotsN = int(window*tr.stats.sampling_rate)
+        knotsN = int(0.1*window*tr.stats.sampling_rate)
         knots = numpy.linspace(t[knotsN/2], t[-knotsN/2], len(t)/knotsN)
         spline = interpolate.LSQUnivariateSpline(tr.times(), tr.data, t=knots, k=5)
         tr.data -= spline(t)
