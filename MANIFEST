@@ -11,4 +11,5 @@ obspyutils/specfem.py
 obspyutils/subset.py
 obspyutils/event.py
 obspyutils/momenttensor.py
+obspyutils/hypodd.py
 obspyutils/settings.py
