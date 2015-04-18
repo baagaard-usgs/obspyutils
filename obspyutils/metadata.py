@@ -15,6 +15,8 @@ def addLocation(inventory, stream):
     """
     for trace in stream.traces:
         ist = inventory.select(network=trace.stats.network, station=trace.stats.station)
+        if len(ist.networks) == 0 or len(ist.networks[0].stations) == 0:
+            raise ValueError("Could not find station '%s.%s' in inventory." % trace.stats.network, trace.stats.station)
         stmeta = ist.networks[0].stations[0]
         info = {'longitude': stmeta.longitude,
                 'latitude': stmeta.latitude,
