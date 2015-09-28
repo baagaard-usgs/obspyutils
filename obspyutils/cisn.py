@@ -23,9 +23,11 @@ def remove_structures(inventory):
     
     structures = []
     for line in lines:
-        if line[0] == "#":
+        if line[0] == "#" or len(line.strip()) == 0:
             continue
         fields = line.split()
+        if len(fields) < 9:
+            raise ValueError("Could not split line '%s'." % line.strip())
         station = fields[0]
         network = fields[1]
         channel = fields[2]
@@ -49,5 +51,10 @@ def remove_structures(inventory):
         for station in remove:
             network.stations.remove(station)
 
+
+if __name__ == "__main__":
+    import obspy.core.inventory
+    inventory = obspy.core.inventory.Inventory([], "")
+    remove_structures(inventory)
 
 # End of file
