@@ -32,6 +32,18 @@ def seismicMoment(Mw):
 
 
 #-----------------------------------------------------------------------
+def magToRadiusSlip(mag, stressDrop=3.0e+6):
+    """
+    Compute radius of source using stress drop for circular source.
+    """
+    from math import pi
+    moment = seismicMoment(mag)
+    r = (7/16.0*moment/stressDrop)**(1/3.0)
+    avgslip = moment/(3.0e+10*pi*r**2)
+    return (r, avgslip)
+
+
+#-----------------------------------------------------------------------
 def extractDC(mt, rescale=False):
     """
                                   [+0.5,  0,   0]
