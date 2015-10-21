@@ -7,16 +7,22 @@
 
 
 #-----------------------------------------------------------------------
-def gather(filename):
-
+def merge(a, b):
+    """
+    Merge dictionaries. Destination is b.
+    """
     from copy import deepcopy
-    def merge(a, b):
-        if isinstance(b, dict) and isinstance(a, dict):
-            a_and_b = a.viewkeys() & b.viewkeys()
-            every_key = a.viewkeys() | b.viewkeys()
-            return {k: merge(a[k], b[k]) if k in a_and_b else 
-                    deepcopy(a[k] if k in a else b[k]) for k in every_key}
-        return deepcopy(b)
+
+    if isinstance(b, dict) and isinstance(a, dict):
+        a_and_b = a.viewkeys() & b.viewkeys()
+        every_key = a.viewkeys() | b.viewkeys()
+        return {k: merge(a[k], b[k]) if k in a_and_b else 
+                deepcopy(a[k] if k in a else b[k]) for k in every_key}
+    return deepcopy(b)
+
+
+#-----------------------------------------------------------------------
+def gather(filename):
 
     # Get local parameters
     import json
