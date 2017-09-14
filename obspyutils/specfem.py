@@ -9,7 +9,7 @@ import obspy
 import numpy
 
 #-----------------------------------------------------------------------
-def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTime=None, channelCode="HX", dataType='vel'):
+def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTime=None, channelCode="HX", dataType='vel', hdur=0.0):
     """
     Collect ASCII waveform output from SPECFEM3D simulation and convert them to obspy stream.
     """
@@ -41,7 +41,7 @@ def tostream(filename="DATA/STATIONS_FILTERED", dataDir="OUTPUT_FILES", originTi
             wfilename = "%s/%s.%s.%s.%s" % \
               (dataDir, station, network, channel, suffix)
             raw = numpy.loadtxt(wfilename)
-            t = raw[:,0]
+            t = raw[:,0] + hdur
             data = raw[:,1]
             dt = t[1]-t[0]
 

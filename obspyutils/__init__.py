@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # ======================================================================
 #
 #                           Brad T. Aagaard
@@ -9,17 +7,18 @@
 #
 
 __all__ = [
-    "cisn",
     "baseline",
-    "pickle",
+    "cisn",
+    "cusp",
+    "event",
+    "hypodd",
     "metadata",
-    "rotate",
+    "momenttensor",
+    "noise",
     "pylith",
+    "rotate",
     "specfem",
     "subset",
-    "event",
-    "momenttensor",
-    'settings',
 ]
 
 
