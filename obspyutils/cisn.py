@@ -16,7 +16,7 @@ def remove_structures(inventory):
     """
 
     import urllib2
-    adhocURL = "http://agent86.gps.caltech.edu/utils/adhoc.lis"
+    adhocURL = "https://pasadena.wr.usgs.gov/utils/adhoc.lis"
     fin = urllib2.urlopen(adhocURL)
     lines = fin.readlines()
     fin.close()
