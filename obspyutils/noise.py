@@ -23,7 +23,7 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
     
     for tr in stream:
         tr.dataOrig = tr.data.copy()
-        coefs = pywt.wavedec(tr.data, wavelet)
+        coefs = pywt.wavedec(tr.data, wavelet, mode="constant")
         tr.coefsOrig = _copyCoefs(coefs)
 
         coefsNoise = []
@@ -48,7 +48,7 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
             nlevels = len(coefs)-1
             for i,coef in enumerate(coefs[1:]):
                 level = nlevels - i
-                numCoefTarget = numPtsPre / 2**level
+                numCoefTarget = int(numPtsPre / 2**level)
                 coefPre = coef[:numCoefTarget]
                 numCoefPre = coefPre.shape[-1]
                 median = numpy.median(numpy.abs(coefPre))
@@ -69,10 +69,12 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
         rmsNoise = numpy.sqrt(numpy.mean(cArrayN[mask]**2))
         tr.StoN = rmsSignal/rmsNoise
         
-        tr.coefs = coefs
-        tr.data = pywt.waverec(coefs, wavelet)
+        tr.data = pywt.waverec(coefs, wavelet, mode="constant")
+        if tr.data.shape[-1] > tr.dataOrig.shape[-1]:
+            tr.data = tr.data[:-1]
         if store_noise:
-            tr.coefsNoise = coefsNoise
-            tr.dataNoise = pywt.waverec(coefsNoise, wavelet)
+            tr.dataNoise = pywt.waverec(coefsNoise, wavelet, mode="constant")
+            if tr.dataNoise.shape[-1] > tr.dataOrig.shape[-1]:
+                tr.dataNoise = tr.dataNoise[:-1]
     return
             
