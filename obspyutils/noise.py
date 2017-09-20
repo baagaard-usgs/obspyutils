@@ -26,8 +26,7 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
         coefs = pywt.wavedec(tr.data, wavelet)
         tr.coefsOrig = _copyCoefs(coefs)
 
-        if store_noise:
-            coefsNoise = []
+        coefsNoise = []
 
         if remove_bg:
             for coef in coefs:
@@ -39,10 +38,9 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
                 print("Preprocessing kurt: %f, threshold: %f" % (kurt, threshold,))
                 mask = numpy.abs(kurt) <= threshold
                 if mask:
-                    if store_noise:
-                        coefsNoise.append(coef.copy())
+                    coefsNoise.append(coef.copy())
                     coef *= 0.0
-                elif store_noise:
+                else:
                     coefsNoise.append(0.0*coef)
 
         if preevent_window is not None and preevent_window > 0.0:
@@ -58,12 +56,19 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
                 threshold = std * (2.0*numpy.log(numCoefPre)) / preevent_threshold_reduction
                 print("Postprocessing threshold level: %d, : %f" % (level, threshold,))
                 mask = numpy.abs(coef) < threshold
-                if store_noise:
-                    coefsNoise[1+i][mask] += coef[mask]
-                    coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask])
+                coefsNoise[1+i][mask] += coef[mask]
+                coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask])
                 coef[mask] = 0.0
                 coef[~mask] -= threshold*numpy.sign(coef[~mask])
 
+        # Signal to noise ratio
+        cArray,cSlices = pywt.coeffs_to_array(coefs)
+        cArrayN,cSlices = pywt.coeffs_to_array(coefsNoise)
+        mask = numpy.abs(cArray) > 0.0
+        rmsSignal = numpy.sqrt(numpy.mean(cArray[mask]**2))
+        rmsNoise = numpy.sqrt(numpy.mean(cArrayN[mask]**2))
+        tr.StoN = rmsSignal/rmsNoise
+        
         tr.coefs = coefs
         tr.data = pywt.waverec(coefs, wavelet)
         if store_noise:
