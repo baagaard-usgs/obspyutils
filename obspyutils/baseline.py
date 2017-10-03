@@ -7,8 +7,9 @@
 
 import numpy
 import obspy
-from scipy import optimize
-from scipy import interpolate
+import scipy.optimize
+import scipy.interpolate
+import scipy.integrate
 
 # ----------------------------------------------------------------------
 def _linearvel(t, v0, af):
@@ -32,7 +33,7 @@ def _correctionV0(acc, tpre, ttail):
     mask = t >= t2
     tfit = t[mask]
     vfit = vel.data[mask]
-    p = optimize.curve_fit(_linearvel, tfit, vfit)
+    p = scipy.optimize.curve_fit(_linearvel, tfit, vfit)
     (v0, af) = p[0]
 
     # Average acceleration in strong part of record
@@ -67,9 +68,69 @@ def baseline_correction_spline(stream, window=2.0):
         t = tr.times()
         knotsN = int(0.1*window*tr.stats.sampling_rate)
         knots = numpy.linspace(t[knotsN/2], t[-knotsN/2], len(t)/knotsN)
-        spline = interpolate.LSQUnivariateSpline(tr.times(), tr.data, t=knots, k=5)
+        spline = scipy.interpolate.LSQUnivariateSpline(tr.times(), tr.data, t=knots, k=5)
         tr.data -= spline(t)
     return
+
+
+# ----------------------------------------------------------------------
+def correction_preonly(data, preevent_window=10.0):
+        if isinstance(data, obspy.core.Stream):
+            for tr in data:
+                correction_preonly(tr, preevent_window)
+        else:
+            dt = data.stats.delta
+            numPreWindow = 1+int(preevent_window/dt)
+
+            poly = numpy.polyfit(data.times()[:numPreWindow], scipy.integrate.cumtrapz(data.data[:numPreWindow], dx=dt, initial=0.0), deg=1)
+            data.data -= poly[0]
+        return
+
+# ----------------------------------------------------------------------
+def correction_constant(data):
+        if isinstance(data, obspy.core.Stream):
+            for tr in data:
+                correction_constant(tr)
+        else:
+            dt = data.stats.delta
+            vel = scipy.integrate.cumtrapz(data.data, dx=dt, initial=0.0)
+            disp = scipy.integrate.cumtrapz(vel, dx=dt, initial=0.0)
+            poly = numpy.polyfit(data.times(), disp, deg=2)
+            data.data -= 2.0*poly[0]
+        return
+
+# ----------------------------------------------------------------------
+def integrate_acc(data):
+        """
+        """
+        if isinstance(data, obspy.core.Stream):
+            tracesVel = []
+            tracesDisp = []
+            for tr in stream:
+                trVel,trDisp = integrate_acc(tr)
+                tracesVel.append(trVel)
+                tracesDisp.append(trDisp)
+            return (obspy.core.Stream(traces=tracesVel), obspy.core.Stream(traces=tracesDisp),)
+        else:
+            dt = data.stats.delta
+            t = data.times()
+            vel = scipy.integrate.cumtrapz(data.data, dx=dt, initial=0.0)
+            disp = scipy.integrate.cumtrapz(vel, dx=dt, initial=0.0)
+            poly = numpy.polyfit(t, disp, deg=2)
+            # poly[0] should be 0 if we have a good baseline correction
+            
+            vel -= 2.0*poly[0]*t + poly[1]
+            disp -= poly[0]*t**2 + poly[1]*t + poly[2]
+
+            trVel = data.copy()
+            trVel.data = vel
+
+            trDisp = data.copy()
+            trDisp.data = disp
+
+            return (trVel, trDisp,)
+            
+        return
 
 
 # End of file
