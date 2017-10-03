@@ -8,26 +8,51 @@
 #
 
 import numpy
+import logging
 
-def _copyCoefs(coefs):
-    coefCopy = []
-    for coef in coefs:
-        coefCopy.append(coef.copy())
-    return coefCopy
+def denoise(stream, wavelet="coif4", remove_bg=True, preevent_window=10.0, preevent_threshold_reduction=2.0, store_orig=False, store_noise=False):
+    """Remove noise from waveforms using wavelets in a two-step
+    process. In the first step, noise is identified via a Kurtosis
+    analysis of the wavelet coefficients. In the second step, the
+    noise level in a pre-event window is determined for each wavelet
+    level and then removed from the waveform using a soft threshold.
+
+    :type wavelet: str
+    :param waveform: Name of wavelet to use in denoising.
+    :type remove_bg: bool
+    :param remove_bg: If True, perform the first step in the denoising process.
+    :type preevent_window: float
+    :param preevent_window: Size of pre-event window to use in second step. Skip second step if <= 0.
+    :type preevent_threshold_reduction: float
+    :param preevent_threshold_reduction: Factor to reduce threshold of noise level in second step.
+    :type store_orig: bool
+    :param store_orig: Return a copy of the original waveforms.
+    :type store_noise: bool
+    :param store_noise: Return the noise waveforms removed.
+    :returns: Dictionary containing the denoised waveforms and, if
+    requested, original waveforms and noise waveforms.
+
+    """
+    MODE = "symmetric"
     
-def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_reduction=2.0, store_noise=False, wavelet="coif4"):
     try:
         import pywt
     except ImportError:
         raise ImportError("_denoise() requires PyWavelets (pywt) Python module.")
-    
-    for tr in stream:
-        tr.dataOrig = tr.data.copy()
-        coefs = pywt.wavedec(tr.data, wavelet, mode="constant")
-        tr.coefsOrig = _copyCoefs(coefs)
 
+    logger = logging.getLogger(__name__)
+
+    dataOut = {}
+    if store_orig:
+        dataOut["orig"] = stream.copy()
+
+    tracesNoise = []    
+    for tr in stream:
+        channelLabel = "%s.%s.%s" % (tr.stats.network, tr.stats.station, tr.stats.channel)
         coefsNoise = []
 
+        coefs = pywt.wavedec(tr.data, wavelet, mode=MODE)
+        
         if remove_bg:
             for coef in coefs:
                 numCoef = coef.shape[-1]
@@ -35,7 +60,7 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
                 mean = numpy.mean(coef)
                 kurt = numpy.sum((coef-mean)**4) / (numCoef*std**4) - 3
                 threshold = (24.0 / (numCoef*(1.0-0.9)))**0.5
-                print("Preprocessing kurt: %f, threshold: %f" % (kurt, threshold,))
+                logger.info("Channel %s: Step 1, kurt: %f, threshold: %f" % (channelLabel, kurt, threshold,))
                 mask = numpy.abs(kurt) <= threshold
                 if mask:
                     coefsNoise.append(coef.copy())
@@ -54,13 +79,20 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
                 median = numpy.median(numpy.abs(coefPre))
                 std = median / 0.6745
                 threshold = std * (2.0*numpy.log(numCoefPre)) / preevent_threshold_reduction
-                print("Postprocessing threshold level: %d, : %f" % (level, threshold,))
+                logger.info("Channel %s: Step 2: threshold level: %d, : %f" % (channelLabel, level, threshold,))
                 mask = numpy.abs(coef) < threshold
                 coefsNoise[1+i][mask] += coef[mask]
                 coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask])
                 coef[mask] = 0.0
                 coef[~mask] -= threshold*numpy.sign(coef[~mask])
 
+        tr.data = pywt.waverec(coefs, wavelet, mode=MODE)
+
+        if store_noise:
+            trNoise = tr.copy()
+            trNoise.data = pywt.waverec(coefsNoise, wavelet, mode=MODE)
+            tracesNoise.append(trNoise)
+                
         # Signal to noise ratio
         cArray,cSlices = pywt.coeffs_to_array(coefs)
         cArrayN,cSlices = pywt.coeffs_to_array(coefsNoise)
@@ -68,13 +100,13 @@ def denoise(stream, remove_bg=True, preevent_window=10.0, preevent_threshold_red
         rmsSignal = numpy.sqrt(numpy.mean(cArray[mask]**2))
         rmsNoise = numpy.sqrt(numpy.mean(cArrayN[mask]**2))
         tr.StoN = rmsSignal/rmsNoise
+        logger.info("Channel %s: S/N: %.1f" % (channelLabel, tr.StoN,))
+
+    dataOut["data"] = stream
+    if store_noise:
+        import obspy.core
+        dataOut["noise"] = obspy.core.Stream(traces=tracesNoise)
+    
         
-        tr.data = pywt.waverec(coefs, wavelet, mode="constant")
-        if tr.data.shape[-1] > tr.dataOrig.shape[-1]:
-            tr.data = tr.data[:-1]
-        if store_noise:
-            tr.dataNoise = pywt.waverec(coefsNoise, wavelet, mode="constant")
-            if tr.dataNoise.shape[-1] > tr.dataOrig.shape[-1]:
-                tr.dataNoise = tr.dataNoise[:-1]
-    return
+    return dataOut
             
