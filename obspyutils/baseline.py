@@ -133,4 +133,31 @@ def integrate_acc(data):
         return
 
 
+# ----------------------------------------------------------------------
+def integrate_vel(data):
+        """
+        """
+        if isinstance(data, obspy.core.Stream):
+            tracesDisp = []
+            for tr in stream:
+                trDisp = integrate_vel(tr)
+                tracesDisp.append(trDisp)
+            return obspy.core.Stream(traces=tracesDisp)
+        else:
+            dt = data.stats.delta
+            t = data.times()
+            disp = scipy.integrate.cumtrapz(data.data, dx=dt, initial=0.0)
+            poly = numpy.polyfit(t, disp, deg=1)
+            
+            disp -= 2.0*poly[0]*t + poly[1]
+            disp -= poly[0]
+
+            trDisp = data.copy()
+            trDisp.data = disp
+
+            return trDisp
+            
+        return
+
+
 # End of file
