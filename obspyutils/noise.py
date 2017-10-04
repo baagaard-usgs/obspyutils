@@ -33,7 +33,7 @@ def denoise(stream, wavelet="coif4", remove_bg=True, preevent_window=10.0, preev
     requested, original waveforms and noise waveforms.
 
     """
-    MODE = "symmetric"
+    MODE = "constant"
     
     try:
         import pywt
@@ -82,9 +82,9 @@ def denoise(stream, wavelet="coif4", remove_bg=True, preevent_window=10.0, preev
                 logger.info("Channel %s: Step 2: threshold level: %d, : %f" % (channelLabel, level, threshold,))
                 mask = numpy.abs(coef) < threshold
                 coefsNoise[1+i][mask] += coef[mask]
-                coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask])
+                #coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask]) # soft mask
                 coef[mask] = 0.0
-                coef[~mask] -= threshold*numpy.sign(coef[~mask])
+                #coef[~mask] -= threshold*numpy.sign(coef[~mask]) # soft mask
 
         tr.data = pywt.waverec(coefs, wavelet, mode=MODE)
 
@@ -96,9 +96,13 @@ def denoise(stream, wavelet="coif4", remove_bg=True, preevent_window=10.0, preev
         # Signal to noise ratio
         cArray,cSlices = pywt.coeffs_to_array(coefs)
         cArrayN,cSlices = pywt.coeffs_to_array(coefsNoise)
-        mask = numpy.abs(cArray) > 0.0
-        rmsSignal = numpy.sqrt(numpy.mean(cArray[mask]**2))
-        rmsNoise = numpy.sqrt(numpy.mean(cArrayN[mask]**2))
+        # if soft threshold
+        #mask = numpy.abs(cArray) > 0.0
+        #rmsSignal = numpy.sqrt(numpy.mean(cArray[mask]**2))
+        #rmsNoise = numpy.sqrt(numpy.mean(cArrayN[mask]**2))
+        # hard threshold
+        rmsSignal = numpy.sqrt(numpy.mean(cArray**2))
+        rmsNoise = numpy.sqrt(numpy.mean(cArrayN**2))
         tr.StoN = rmsSignal/rmsNoise
         logger.info("Channel %s: S/N: %.1f" % (channelLabel, tr.StoN,))
 
