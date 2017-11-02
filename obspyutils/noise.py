@@ -33,7 +33,7 @@ def denoise(stream, wavelet="coif4", remove_bg=True, preevent_window=10.0, preev
     requested, original waveforms and noise waveforms.
 
     """
-    MODE = "constant"
+    MODE = "zero"
     
     try:
         import pywt
