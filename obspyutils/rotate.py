@@ -40,11 +40,16 @@ def toENZ(inventory, stream):
 
         starttime = tr0.stats.starttime
         endtime = tr0.stats.endtime 
-        
+
+        fail = False
         for tr in streamO.traces:
             cinventory = inventory.select(network=tr.stats.network, station=tr.stats.station, channel=tr.stats.channel)
             channel = cinventory.networks[0].stations[0].channels[0]
             trC = tr.copy().trim(starttime=starttime, endtime=endtime, pad=True, fill_value=0)
+            if trC.data.shape != shape:
+                print "Mismatch in shape for channels of station: %s" % stkey
+                fail = True
+                break
             azR = channel.azimuth.real * pi/180.0
             dipR = channel.dip.real * pi/180.0
             dataE += sin(azR)*cos(dipR)*trC.data
@@ -56,7 +61,8 @@ def toENZ(inventory, stream):
         trN = _newTrace(dataN, header, 'N')
         trZ = _newTrace(dataZ, header, 'Z')
 
-        tracesR += [trE, trN, trZ]
+        if not fail:
+            tracesR += [trE, trN, trZ]
 
     streamR = obspy.core.Stream(traces=tracesR)
     return streamR
