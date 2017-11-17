@@ -10,7 +10,7 @@
 import numpy
 import logging
 
-def denoise(stream, wavelet="coif4", remove_bg=True, zero_coarse_levels=1, preevent_window=10.0, preevent_threshold_reduction=2.0, store_orig=False, store_noise=False):
+def denoise(stream, wavelet="coif4", remove_bg=True, zero_coarse_levels=1, zero_fine_levels=1, preevent_window=10.0, preevent_threshold_reduction=2.0, store_orig=False, store_noise=False):
     """Remove noise from waveforms using wavelets in a two-step
     process. In the first step, noise is identified via a Kurtosis
     analysis of the wavelet coefficients. In the second step, the
@@ -67,9 +67,7 @@ def denoise(stream, wavelet="coif4", remove_bg=True, zero_coarse_levels=1, preev
                     coef *= 0.0
                 else:
                     coefsNoise.append(0.0*coef)
-            for ilevel in range(1+zero_coarse_levels):
-                coefsNoise[ilevel] = coefs[ilevel]
-                coefs[ilevel] *= 0.0
+                
                     
         if preevent_window is not None and preevent_window > 0.0:
             numPtsPre = preevent_window*tr.stats.sampling_rate
@@ -86,9 +84,17 @@ def denoise(stream, wavelet="coif4", remove_bg=True, zero_coarse_levels=1, preev
                 mask = numpy.abs(coef) < threshold
                 coefsNoise[1+i][mask] += coef[mask]
                 coefsNoise[1+i][~mask] += threshold*numpy.sign(coef[~mask]) # (use for soft mask)
-                coef[mask] = 0.0
+                coef[mask] *= 0.0
                 coef[~mask] -= threshold*numpy.sign(coef[~mask]) # (use for soft mask)
 
+        for ilevel in range(1+zero_coarse_levels):
+            coefsNoise[ilevel] += coefs[ilevel].copy()
+            coefs[ilevel] *= 0.0
+        for ilevel in range(zero_fine_levels):
+            index = -(1+ilevel)
+            coefsNoise[index] += coefs[index].copy()
+            coefs[index] *= 0.0
+                
         tr.data = pywt.waverec(coefs, wavelet, mode=MODE)
 
         if store_noise:
