@@ -32,7 +32,7 @@ def seismicMoment(Mw):
 
 
 #-----------------------------------------------------------------------
-def magToRadiusSlip(mag, stressDrop=3.0e+6):
+def magToRadiusSlip(mag, stressDrop=5.0e+6):
     """
     Compute radius of source using stress drop for circular source.
     """
